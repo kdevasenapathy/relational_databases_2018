@@ -1,0 +1,68 @@
+Write the relational model schema for your airline database in this file, using
+the notation we have used all term.  You can indicate primary key columns by
+enclosing the attribute names in _ characters.  Include descriptions of other
+candidate keys or foreign keys (if any) immediately under each relation schema.
+Example:
+
+foo(_a_, b, c)
+ * b is also a candidate key
+ * c is a foreign key to bar.c
+------------------------------------------------------------------------------
+
+-- [Problem 4]
+flight(_flight_no_, _date_, time, source, dest, flight_type, type_code)
+* type_code is a foreign key referencing airplane
+* flight_no is referenced by ticketed_seat
+This schema combines flight and the relationship flight_model since now
+total ownership of flight by airplane can be enforced by making type_code
+not null, and instead of having to create a new schema with both flight and
+airplane's primary keys, we can just add airplane's type_code as a foreign key.
+
+airplane(_type_code_, manufacturer, model)
+* type_code is a foreign key for flight and seat
+
+seat(_type_code_, _seat_no_, class, type, exit)
+* seat_no is referenced by ticketed_seat
+* type_code is a foreign key referencing airplane
+This schema combines seat and the relationship poss_seats since now
+total ownership of seat by airplane can be enforced, and we have a primary
+key for seat by using both and seat_number to uniquely identify
+each seat. This saves us from having to create a new schema that associates
+the possible seat numbers with each type_code, which would be mostly duplicate
+information from seat anyway.
+
+customer(_cust_id_, first_name, last_name, email, phone_nums)
+* cust_id is referenced by purchaser and traveler
+
+purchaser(_cust_id_, credit_card_no, exp_date, verif_no)
+* cust_id is a foreign key referencing customer
+* cust_id is also referenced by purchase
+
+traveler(_cust_id_, pass_no, citizen, emergency_contact, emergency_no, ffn)
+* cust_id is a fcoreign key referencing customer
+* cust_id is also referenced by ticketed_traveler
+
+purchase(_purchase_id_, cust_id, timestamp, confirm_no)
+* confirm_no is a candidate key
+* cust_id is a foreign key referencing purchaser
+This schema combines purchase and transaction so that we can ensure that
+each purchase is bought by one purchaser by making cust_id not null, and
+so we can find who purchased each purchase.
+
+ticket(_ticket_id_, sale_price, purchase_id)
+* ticket_id is referenced by ticketed_traveler, and ticketed_seat
+* purchase_id is a foreign key referencing purchase
+This schema combines bought_ticket and ticket so that we can find out
+what tickets were purchased in each transaction.
+
+ticketed_traveler(_ticket_id_, cust_id)
+* ticket_id is a foreign key referencing ticket
+* cust_id is a foreign key referencing traveler
+This schema ensures that each ticket only belongs to one customer, though
+multiple tickets can be held by the same customer.
+
+ticketed_seat(_flight_no_, _date_, _seat_no_, ticket_id)
+* flight_no, date is a foreign key referencing flight
+* seat_no is a foreign key referencing seat
+* ticket_id is a foreign key referencing ticket
+* ticket_id is also a candidate key

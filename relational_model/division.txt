@@ -1,0 +1,35 @@
+-- [Problem 1a]
+PI[R MINUS S](r) MINUS PI[R MINUS S]((PI[R MINUS S](r) CROSS s)	MINUS PI[R MINUS S, S](r));
+-- If we put in the values for monkey_likes and monkey_foods we see
+PI[name](monkey_likes) MINUS PI[name]((PI[name](monkey_likes) CROSS monkey_foods) MINUS PI[name, foods](monkey_likes));
+
+-- All the tuples in the expression
+(PI[name](monkey_likes) CROSS monkey_foods) MINUS PI[name, food](monkey_likes);
+-- will be the tuples of monkeys with the foods they do not like
+-- that are also in monkey_foods. At this point, any foods in the
+-- monkey_likes.food that are not in monkey_foods.food get disposed of
+-- because set subtraction results in all the results in monkey_foods that are
+-- not in monkey_likes.food, but not the ones in monkey_likes.food but not in
+-- monkey_foods--this is how tofu gets removed from the relation
+PI[name]((PI[name](monkey_likes) CROSS monkey_foods) MINUS PI[name, food](monkey_likes));
+-- will give us all the monkeys who don't like one of the foods in monkey_foods,
+-- so the full expression gives us the names of all the monkeys who do like
+-- all of the foods in monkey_foods, which because tofu was removed in the
+-- set subtraction does not preclude the names of monkeys who liked all the foods
+-- in monkey_foods and more. Thus, Guenter is included.
+
+-- [Problem 1b]
+-- Define exact division
+PI[R MINUS S](r) MINUS PI[R MINUS S]((PI[R MINUS S](r) CROSS s)	MINUS PI[R MINUS S,S](r));
+-- We saw in the previous example that set subtraction caused the
+-- extraneous tuples in r to be removed. In this case,
+r MINUS (s INTERSECT r);
+-- which is why the things in s that are not in r are not included
+-- we can retain them by instead doing
+(r UNION s) MINUS (r INTERSECT s);
+--Applying this to the division problem, we can replace the set difference with
+PI[R MINUS S](r) MINUS PI[R MINUS S](((PI[R MINUS S](r) CROSS s)UNION PI[R MINUS S,S](r)) MINUS ((PI[R MINUS S](r) CROSS s)	INTERSECT PI[R MINUS S,S](r)));
+-- This change will include Guenter in the subtracted expression, thereby
+-- resulting in his removal from the final expression
+
+-- [Problem 1c]

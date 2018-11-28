@@ -1,0 +1,49 @@
+-- [Problem 1a]
+SIGMA[theta]([A] GROUP [F](r)) = [A] GROUP [F](SIGMA[theta](r));
+-- The two expressions are equivalent.
+-- is a selection of an aggregation of attributes that A has.
+-- Given that the attributes used in theta must be within A, the grouping
+-- attributes, we know that they will not be operated on by F in [A] GROUP [F](r)
+-- Consequently, whatever selection criterion SIGMA[theta] is imposing
+-- is unchanged by [A] GROUP [F] either, because the two operations are
+-- working on mutually exclusive sets of attributes within r.
+-- Since they are never operating on the same attributes, the order in which
+-- they occur does not matter, and thus, the two are equivalent.
+
+-- [Problem 1b]
+PI[A](r - s) != PI[A](r) - PI[A](s)
+-- The two expressions are not equivalent
+--Example: Let r = {(a, b), (a, c)}, s = {(a, b), (a, d)}
+PI[A](r - s) = PI[A] {(a, c)} = a;
+PI[A](r) - PI[A](s) = {a} - {a} = {};
+--These are clearly not equivalent.
+
+-- [Problem 1c]
+(r LBOWTIE s) LBOWTIE t != r LBOWTIE (s LBOWTIE t)
+--The two expressions are not equivalent.
+--Example: Let r = {(a, b), (c, d), (e, f)}, s = {(a, x), (c, y)}, and t = {(a, n), (e, z)}
+-- r LBOWTIE s = {(a, b, x), (c, d, y), (e, f, null)} LBOWTIE t = {(a, b, x, n), (c, d, y, null), (e, f, null, z)}
+-- s LBOWTIE t = {(a, x, n), (c, y, null)} and r LBOWTIE (s LBOWTIE t) = {(a, b, x, n), (c, d, y, null), (e, f, null, null)}
+-- As can be seen, the common value of e between r and t is dropped.
+
+-- [Problem 1d]
+SIGMA[theta](r LBOWTIE s) = SIGMA[theta](r) LBOWTIE s
+-- The two expressions are equivalent.
+-- Given that theta only utilizes attributes within r, we know that it will
+-- not be operating on any of the attributes within s.
+-- We also see that because r and s are being left outer joined, all of the
+-- tuples in r will be retained with the corresponding attributes in s
+-- simply appended on. As such, SIGMA[theta] (r) will pull out the same
+-- tuples as SIGMA[theta] (r LBOWTIE s), so it's irrelevant whether we
+-- append the attributes in s before or after the selection.
+--Thus, the two are equivalent.
+
+-- [Problem 1e]
+SIGMA[theta](r LBOWTIE s) != r LBOWTIE SIGMA[theta](s)
+-- The two expressions are not equivalent.
+--Example: Let r = {(1, a), (2, b), (3, c)}, s = {(1, 9), (3, 15), (4, 35)}, theta = s2 > 12
+--r LBOWTIE s = {(1, a, 9), (2, b, null), (3, c, 15)}
+--SIGMA[s2>12] (r LBOWTIE s) = {(3, c, 15)} since null > 12? evaluates to unknown
+--SIGMA[s2>12](s) = {(3, 15), (4, 35)}
+-- r LBOWTIE SIGMA[s2>12](s) = {(1, a, null), (2, b, null), (3, c, 15)}
+-- Clearly the two differ, so they are not equivalent

@@ -1,0 +1,89 @@
+-- [Problem 2.5a]
+-- Finding all the employees who work for First Bank Corporation
+
+PI[person_name](SIGMA[company_name = "First Bank Corporation"](works));
+
+-- [Problem 2.5b]
+-- Finding all the employees who work for First Bank Corporation and their cities
+
+PI[person_name, city](SIGMA[company_name = "First Bank Corporation"](works) BOWTIE employee);
+
+-- [Problem 2.5c]
+-- Finding all the employees, cities, and streets who work for First Bank Corporation and make <10000
+
+PI[person_name, street, city](SIGMA[company_name = "First Bank Corporation" && salary > 10000](works) BOWTIE employee);
+
+-- [Problem 2.5d]
+-- Finding all the employees who live in the city they work
+
+PI[person_name](works BOWTIE employee BOWTIE company);
+
+-- [Problem 2.5e]
+-- Finding companies in all the cities Small Bank Corporations is located in
+-- This query will also return Small Bank Corporations as an answer--to not do this, we would put SIGMA(company_name != "Small Bank Corporation")(query) around it
+
+company DIVIDE PI[city](SIGMA[company_name = "Small Bank Corporation"](company));
+
+-- [Problem 2.6a]
+--Jackson is not included in the result because his name is not in the customer_name
+--attribute of customer, so he does not have a recorded residence and thus is excluded
+--from the query result since there is no matching tuple for him in customer.
+
+-- [Problem 2.6b]
+--We could update the customer relation of the database to include Jackson's address.
+--If his address isn't known, we could put 'null' or 'unknown' in instead.
+
+
+-- [Problem 2.6c]
+-- Query that has residences and includes Jackson
+-- Uncertain if it needs to be borrower BOWTIE loan or just borrower works, but better safe than sorry
+
+PI[customer_name, customer_city](PI[customer_name](borrower BOWTIE loan) LBOWTIE customer);
+
+-- [Problem 2.7a]
+-- Give all the First Bank Corporation employees a 10% raise
+
+works <- PI[person_name, company_name, salary*1.10 AS salary](SIGMA[company_name = "First Bank Corporation"](works) UNION SIGMA[company_name != "First Bank Corporation"](works));
+
+
+-- [Problem 2.7b]
+-- Give all the managers who would be making less than 100,000 a 10% raise, give the rest of the managers a 3% raise
+
+-- temp1 is all of the updated manager tuples with their new salaries
+temp1 <- PI[works.person_name, company_name, salary*1.03](SIGMA[salary * 1.1 > 100000](SIGMA[works.person_name = manager_name](works CROSS manages))) UNION PI[works.person_name, company_name, salary*1.1](SIGMA[salary * 1.1 <= 100000](SIGMA[works.person_name = manager_name](works CROSS manages)));
+-- temp 2 is all of the old manager tuples with their old salaries
+temp2 <- PI[works.person_name, company_name, salary](SIGMA[works.person_name = manager_name](works CROSS manages));
+works <- temp1 UNION (works MINUS temp2);
+
+-- [Problem 2.7c]
+-- Fire all the Small Bank Corporation bois
+
+works <- works MINUS SIGMA[company_name = "Small Bank Corporation"](works);
+
+-- [Problem 2.8a]
+-- Find the accounts with 2 or more customers w/ aggregates
+
+PI[account_number](SIGMA[partners > 2]([account_number] GROUP [count(customer_name) AS partners](account)));
+
+-- [Problem 2.8b]
+-- Find the accounts with 2 or more customers w/o aggregates
+-- This expression is actually disgusting I'm sorry
+
+PI[a1.customer_name](SIGMA[(a1.account_number = a2.account_number = a3.account_number) && (a1.customer_name != a2.customer_name && a2.customer_name != a3.customer_name && a3.customer_name != a1.customer_name)] (RHO[a1](account) CROSS RHO[a2](account) CROSS RHO[a3](account)));
+
+-- [Problem 2.9a]
+-- Company with max number of people
+
+temp <- [company_name] GROUP [count(person_name) AS num_employees](works);
+PI[company_name](temp) MINUS PI[temp.company_name](SIGMA[temp.num_employees < temp2.num_employees](temp CROSS RHO[temp2](temp)));
+
+-- [Problem 2.9b]
+-- Company with minimum payroll
+
+temp <- ([company_name] GROUP [sum(salary) AS payroll](works));
+PI[company_name](temp) MINUS PI[temp.company_name](SIGMA[temp.payroll > temp2.payroll] (RHO[temp2](temp) CROSS temp));
+
+-- [Problem 2.9c]
+-- Company with higher average salary
+temp <- ([company_name] GROUP [avg(salary) AS avg_pay](works));
+PI[company_name](temp) MINUS PI[temp.company_name](SIGMA[temp.avg_pay <= temp2.avg_pay](RHO[firstb](SIGMA[company_name = "First Bank Corporation"](temp)) CROSS temp));
